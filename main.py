@@ -4,6 +4,18 @@ from config import BOT_TOKEN, MAX_RUNTIME_SECONDS
 from trade_manager import TradeManager
 from commands import BotCommands
 from audit_logger import logger
+import os
+
+
+if os.getenv("WALLET_KEY"):
+    from wallet_manager import WalletManager
+    wm = WalletManager()
+    if not wm.get_active_wallets():
+        try:
+            wm.import_wallet(os.getenv("WALLET_KEY"), "main")
+        except Exception:
+            pass
+
 
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
