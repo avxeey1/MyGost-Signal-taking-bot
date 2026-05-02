@@ -1,0 +1,37 @@
+name: Solana Trading Bot Runner
+
+on:
+  schedule:
+    # Runs every 4 hours
+    - cron: '0 */4 * * *'
+  workflow_dispatch:   # allow manual trigger
+
+concurrency:
+  group: bot-run
+  cancel-in-progress: true   # kill previous run to avoid overlap
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300      # 5 hours max (job will be killed by new concurrency anyway)
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
+          RPC_URL: ${{ secrets.RPC_URL }}
+          # wallet private keys are managed via /importwallet inside the bot (saved to file)
+        run: python main.py
